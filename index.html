@@ -3,57 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pesquisa: Cadeia Alimentar e Biomas</title> <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <title>Sistema Acadêmico</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        #chat { height: 300px; border: 1px solid #ccc; overflow-y: scroll; background: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
-        .msg { margin-bottom: 8px; padding: 5px; border-bottom: 1px solid #eee; }
-        .hora { font-size: 0.7em; color: #888; margin-left: 10px; }
-        input { padding: 10px; width: 70%; border-radius: 5px; border: 1px solid #ddd; }
-        button { padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        header { background: #1f1f1f; padding: 15px; text-align: center; border-bottom: 1px solid #333; font-size: 0.9em; color: #888; }
+        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { max-width: 80%; padding: 10px 15px; border-radius: 18px; line-height: 1.4; position: relative; animation: fadeIn 0.3s ease; }
+        .msg.outra { background: #333; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .msg.minha { background: #007bff; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .nome-label { font-size: 0.75em; font-weight: bold; margin-bottom: 3px; display: block; color: #aaa; }
+        .hora { font-size: 0.65em; opacity: 0.7; margin-left: 8px; }
+        footer { padding: 15px; background: #1f1f1f; display: flex; gap: 10px; }
+        input { flex: 1; background: #2c2c2c; border: none; padding: 12px; border-radius: 25px; color: white; outline: none; }
+        button { background: #007bff; border: none; width: 45px; height: 45px; border-radius: 50%; color: white; cursor: pointer; font-weight: bold; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
-    <h3 style="color: #555;">Estudo de Ecossistemas - Anotações</h3>
-    <div id="chat"></div>
-    <input type="text" id="texto" placeholder="Digite sua anotação...">
-    <button onclick="enviar()">Salvar</button>
 
-    <script>
-        // COLE SUAS CHAVES AQUI (IGUAL AS DA IMAGEM QUE VOCÊ TIROU)
-        const firebaseConfig = {
-            apiKey: "AIzaSyA-xcHKzOr7-SmK6QH3FBSnwtoDJKXpDWs",
-            authDomain: "meuchatamigos.firebaseapp.com",
-            databaseURL: "https://meuchatamigos-default-rtdb.firebaseio.com",
-            projectId: "meuchatamigos",
-            storageBucket: "meuchatamigos.appspot.com",
-            messagingSenderId: "1851389516796",
-            appId: "1:1851389516796:web:13b07face0b1d7bae6f479"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+<header>Portal do Aluno - Sala de Estudos Privada</header>
 
-        const nome = prompt("Seu nome de 'aluno':") || "Anonimo";
+<div id="chat"></div>
 
-        function enviar() {
-            const msg = document.getElementById("texto").value;
-            const agora = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-            if(msg) {
-                db.ref("mensagens").push({ nome: nome, texto: msg, hora: agora });
-                document.getElementById("texto").value = "";
-            }
+<footer>
+    <input type="text" id="texto" placeholder="Mande uma mensagem..." onkeypress="if(event.key === 'Enter') enviar()">
+    <button onclick="enviar()">></button>
+</footer>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyA-xcHKzOr7-SmK6QH3FBSnwtoDJKXpDWs",
+        authDomain: "meuchatamigos.firebaseapp.com",
+        databaseURL: "https://meuchatamigos-default-rtdb.firebaseio.com",
+        projectId: "meuchatamigos",
+        storageBucket: "meuchatamigos.appspot.com",
+        messagingSenderId: "1851389516796",
+        appId: "1:1851389516796:web:13b07face0b1d7bae6f479"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // --- SEGURANÇA ---
+    const meuNome = prompt("Nome do Aluno:");
+    const senhaAcesso = prompt("Digite a senha de acesso:");
+    const SENHA_CORRETA = "0502"; // VOCÊ PODE MUDAR A SENHA AQUI!
+
+    if (senhaAcesso !== SENHA_CORRETA) {
+        alert("Acesso Negado! Senha incorreta.");
+        window.location.reload(); // Recarrega a página se errar
+    }
+    // -----------------
+
+    function enviar() {
+        const campo = document.getElementById("texto");
+        const msg = campo.value;
+        const agora = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+        if(msg.trim()) {
+            db.ref("mensagens").push({ nome: meuNome, texto: msg, hora: agora });
+            campo.value = "";
         }
+    }
 
-        db.ref("mensagens").on("child_added", (snap) => {
-            const d = snap.val();
-            const p = document.createElement("div");
-            p.className = "msg";
-            p.innerHTML = `<strong>${d.nome}:</strong> ${d.texto} <span class="hora">${d.hora}</span>`;
-            document.getElementById("chat").appendChild(p);
-            document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
-        });
-    </script>
+    db.ref("mensagens").on("child_added", (snap) => {
+        const d = snap.val();
+        const chat = document.getElementById("chat");
+        const div = document.createElement("div");
+        const classeMsg = d.nome === meuNome ? "minha" : "outra";
+        
+        div.className = `msg ${classeMsg}`;
+        div.innerHTML = `<span class="nome-label">${d.nome}</span>${d.texto}<span class="hora">${d.hora}</span>`;
+        
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+    });
+</script>
+
 </body>
 </html>
