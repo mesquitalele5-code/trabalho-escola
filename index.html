@@ -7,24 +7,23 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #121212; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; }
         header { background: #1f1f1f; padding: 15px; text-align: center; border-bottom: 1px solid #333; font-size: 0.9em; color: #888; }
         #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { max-width: 80%; padding: 10px 15px; border-radius: 18px; line-height: 1.4; position: relative; animation: fadeIn 0.3s ease; }
+        .msg { max-width: 80%; padding: 10px 15px; border-radius: 18px; line-height: 1.4; animation: fadeIn 0.3s ease; }
         .msg.outra { background: #333; align-self: flex-start; border-bottom-left-radius: 2px; }
         .msg.minha { background: #007bff; align-self: flex-end; border-bottom-right-radius: 2px; }
         .nome-label { font-size: 0.75em; font-weight: bold; margin-bottom: 3px; display: block; color: #aaa; }
         .hora { font-size: 0.65em; opacity: 0.7; margin-left: 8px; }
         footer { padding: 15px; background: #1f1f1f; display: flex; gap: 10px; }
         input { flex: 1; background: #2c2c2c; border: none; padding: 12px; border-radius: 25px; color: white; outline: none; }
-        button { background: #007bff; border: none; width: 45px; height: 45px; border-radius: 50%; color: white; cursor: pointer; font-weight: bold; }
+        button { background: #007bff; border: none; width: 45px; height: 45px; border-radius: 50%; color: white; cursor: pointer; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <header>Portal do Aluno - Sala de Estudos Privada</header>
-
 <div id="chat"></div>
 
 <footer>
@@ -46,16 +45,17 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // --- SEGURANÇA ---
     const meuNome = prompt("Nome do Aluno:");
-    const senhaAcesso = prompt("Digite a senha de acesso:");
-    const SENHA_CORRETA = "0502"; // VOCÊ PODE MUDAR A SENHA AQUI!
-
-    if (senhaAcesso !== SENHA_CORRETA) {
-        alert("Acesso Negado! Senha incorreta.");
-        window.location.reload(); // Recarrega a página se errar
+    const senhaAcesso = prompt("Senha de Acesso:");
+    if (senhaAcesso !== "0502") {
+        alert("Acesso Negado!");
+        window.location.reload(); 
     }
-    // -----------------
+
+    // PEDIR PERMISSÃO PARA NOTIFICAÇÕES NA BARRA
+    if (Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
 
     function enviar() {
         const campo = document.getElementById("texto");
@@ -67,6 +67,7 @@
         }
     }
 
+    let carregandoInicial = true;
     db.ref("mensagens").on("child_added", (snap) => {
         const d = snap.val();
         const chat = document.getElementById("chat");
@@ -75,11 +76,20 @@
         
         div.className = `msg ${classeMsg}`;
         div.innerHTML = `<span class="nome-label">${d.nome}</span>${d.texto}<span class="hora">${d.hora}</span>`;
-        
         chat.appendChild(div);
         chat.scrollTop = chat.scrollHeight;
-    });
-</script>
 
+        // NOTIFICAÇÃO NA BARRA DE TAREFAS
+        if (!carregandoInicial && d.nome !== meuNome) {
+            document.title = "🔴 Nova Mensagem!";
+            if (Notification.permission === "granted") {
+                new Notification("Chat Escola", { body: d.nome + ": " + d.texto });
+            }
+            setTimeout(() => { document.title = "Sistema Acadêmico"; }, 3000);
+        }
+    });
+
+    db.ref("mensagens").once("value", () => { carregandoInicial = false; });
+</script>
 </body>
 </html>
