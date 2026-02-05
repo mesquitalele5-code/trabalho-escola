@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat dos Amigos</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #e5ddd5; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        header { background: #075e54; color: white; padding: 15px; text-align: center; font-weight: bold; }
+        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
+        .msg { background: white; padding: 8px 12px; border-radius: 8px; max-width: 80%; box-shadow: 0 1px 1px rgba(0,0,0,0.1); word-wrap: break-word; }
+        .me { align-self: flex-end; background: #dcf8c6; }
+        footer { padding: 10px; background: #f0f0f0; display: flex; gap: 10px; }
+        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 25px; outline: none; }
+        button { background: #075e54; color: white; border: none; padding: 0 20px; border-radius: 25px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<header>Chat do - seu nome -</header>
+<div id="messages"></div>
+<footer>
+    <input type="text" id="userInput" placeholder="Escreva uma mensagem..." autocomplete="off">
+    <button id="sendBtn">></button>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<script>
+    // Seus dados copiados da imagem!
+    const firebaseConfig = {
+        apiKey: "AIzaSyA-xcHKzOr7-SmK6QH3FBSnwtoDJKXpDWs",
+        authDomain: "meuchatamigos.firebaseapp.com",
+        databaseURL: "https://meuchatamigos-default-rtdb.firebaseio.com",
+        projectId: "meuchatamigos",
+        storageBucket: "meuchatamigos.firebasestorage.app",
+        messagingSenderId: "1851389516796",
+        appId: "1:1851389516796:web:13b07face0b1d7bae6f479"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const chatRef = database.ref("mensagens");
+    
+    const nomeUsuario = prompt("Qual seu nome?") || "Amigo";
+
+    function enviar() {
+        const input = document.getElementById('userInput');
+        if (input.value.trim() !== "") {
+            chatRef.push({
+                nome: nomeUsuario,
+                texto: input.value
+            });
+            input.value = "";
+        }
+    }
+
+    document.getElementById('sendBtn').onclick = enviar;
+    document.getElementById('userInput').onkeypress = (e) => { if(e.key === 'Enter') enviar(); };
+
+    chatRef.on("child_added", (snapshot) => {
+        const data = snapshot.val();
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('msg');
+        if (data.nome === nomeUsuario) msgDiv.classList.add('me');
+        msgDiv.innerHTML = `<strong>${data.nome}</strong><br>${data.texto}`;
+        const container = document.getElementById('messages');
+        container.appendChild(msgDiv);
+        container.scrollTop = container.scrollHeight;
+    });
+</script>
+
+</body>
+</html>
